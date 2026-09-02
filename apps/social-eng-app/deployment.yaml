@@ -5,6 +5,8 @@ metadata:
   namespace: social-eng
 spec:
   replicas: 2
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: social-eng-app
