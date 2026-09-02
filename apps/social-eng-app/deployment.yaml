@@ -24,11 +24,31 @@ spec:
           labelSelector:
             matchLabels:
               app: social-eng-app
+      # Pod-уровень securityContext: закрывает находки Trivy #6, #8, #9
+      # (runAsUser/runAsGroup ниже 10000 — 101 это стандартный uid/gid
+      # пользователя nginx в официальном образе) и #10 (seccomp-профиль).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: social-eng-app
-          image: ghcr.io/github.com/xrumdik/social-eng-app:latest
+          image: ghcr.io/<ваш-github-username>/social-eng-app:latest
           ports:
             - containerPort: 80
+          # Container-уровень securityContext: закрывает находки Trivy
+          # #3 (allowPrivilegeEscalation), #4/#5 (drop ALL capabilities),
+          # #12 (единственная разрешённая capability — именно
+          # NET_BIND_SERVICE, необходима, чтобы непривилегированный
+          # пользователь мог слушать порт 80; без неё контейнер не
+          # запустится — порты <1024 иначе требуют root).
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+              add: ["NET_BIND_SERVICE"]
           env:
             # Downward API — реальное имя пода и узла попадают в переменные
             # окружения контейнера, entrypoint-скрипт образа подставляет их

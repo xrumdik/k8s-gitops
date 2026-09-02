@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/xrumdik/k8s-gitops.git
+    repoURL: https://github.com/<ваш-github-username>/k8s-gitops.git
     targetRevision: main
     path: apps/social-eng-app
   destination:
