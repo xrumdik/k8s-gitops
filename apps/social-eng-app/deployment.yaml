@@ -50,7 +50,6 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
-              add: ["NET_BIND_SERVICE"]
           env:
             # Downward API — реальное имя пода и узла попадают в переменные
             # окружения контейнера, entrypoint-скрипт образа подставляет их
@@ -73,13 +72,13 @@ spec:
           readinessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 8080
             initialDelaySeconds: 3
             periodSeconds: 5
           livenessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 8080
             initialDelaySeconds: 10
             periodSeconds: 15
 ---
