@@ -36,8 +36,6 @@ spec:
       containers:
         - name: social-eng-app
 <<<<<<< HEAD
-          image: ghcr.io/xrumdik/social-eng-app:latest
-=======
           image: ghcr.io/xrumdik/social-eng-app:cc1ad72cd22506acc631a2880f121a738da8b9d4
 >>>>>>> c149a458527806e3ac488a68e827f701a6110a90
           ports:
