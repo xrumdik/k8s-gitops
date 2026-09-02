@@ -1,5 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - namespace.yaml
-  - deployment.yaml
+- namespace.yaml
+- deployment.yaml
+images:
+- name: social-eng-app
+  newName: ghcr.io/xrumdik/social-eng-app
+  newTag: 57ab6c2e17fcfafcc801d4d6844b06c605a20ade
