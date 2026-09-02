@@ -35,7 +35,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: social-eng-app
-          image: ghcr.io/<ваш-github-username>/social-eng-app:latest
+          image: ghcr.io/xrumdik/social-eng-app:latest
           ports:
             - containerPort: 80
           # Container-уровень securityContext: закрывает находки Trivy
