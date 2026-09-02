@@ -26,7 +26,7 @@ spec:
               app: social-eng-app
       containers:
         - name: social-eng-app
-          image: ghcr.io/xrumdik/social-eng-app:d4e9d729c32f18b60dc07a24c6b4ff146ffc501a
+          image: ghcr.io/xrumdik/social-eng-app:baf7da65fc50635b7c5d28e58e5d21d208c04398
           ports:
             - containerPort: 80
           env:
