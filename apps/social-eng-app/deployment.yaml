@@ -43,6 +43,10 @@ spec:
       # а пустой emptyDir, примонтированный поверх /usr/share/nginx/html,
       # иначе перекрыл бы собранный сайт из образа.
       initContainers:
+        # trivy:ignore:KSV013 — image-тег подставляется динамически через
+        # Kustomize images-transformer (kustomization.yaml), здесь плейсхолдер
+        # без тега по архитектурным причинам (см. комментарий в kustomization.yaml).
+        # Реальный образ всегда конкретный SHA-тег, никогда не :latest по факту.
         - name: copy-html
           image: social-eng-app
           command: ["sh", "-c", "cp -r /usr/share/nginx/html/. /html-dest/"]
@@ -64,6 +68,7 @@ spec:
             - name: html
               mountPath: /html-dest
       containers:
+        # trivy:ignore:KSV013 — см. пояснение у initContainer выше, та же причина.
         - name: social-eng-app
           image: social-eng-app
           ports:
