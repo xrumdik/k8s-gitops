@@ -16,9 +16,6 @@ spec:
         app: social-eng-app
     spec:
       # Явное распределение: ровно один под на каждой ноде.
-      # maxSkew: 1 + whenUnsatisfiable: DoNotSchedule — планировщик
-      # не позволит двум подам оказаться на одной ноде, пока есть
-      # свободная нода с меньшим количеством подов этого приложения.
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
@@ -26,10 +23,13 @@ spec:
           labelSelector:
             matchLabels:
               app: social-eng-app
-      # Pod-уровень securityContext: закрывает находки Trivy #6, #8, #9
-      # (runAsUser/runAsGroup ниже 10000 — 101 это стандартный uid/gid
-      # рантайм-пользователя образа nginxinc/nginx-unprivileged) и #10
-      # (seccomp-профиль).
+      # Pod-уровень securityContext: runAsUser/runAsGroup/seccompProfile
+      # наследуются ОБОИМИ контейнерами (init и основным) автоматически.
+      # А вот readOnlyRootFilesystem/capabilities/allowPrivilegeEscalation
+      # НЕ наследуются от пода — их нужно задавать в каждом контейнере
+      # отдельно, поэтому ниже они продублированы и в initContainer,
+      # и в основном контейнере (иначе Trivy справедливо считает
+      # initContainer вообще никак не защищённым).
       securityContext:
         runAsNonRoot: true
         runAsUser: 101
@@ -46,6 +46,20 @@ spec:
         - name: copy-html
           image: social-eng-app
           command: ["sh", "-c", "cp -r /usr/share/nginx/html/. /html-dest/"]
+          securityContext:
+            runAsUser: 101
+            runAsGroup: 101
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 25m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 32Mi
           volumeMounts:
             - name: html
               mountPath: /html-dest
@@ -54,13 +68,9 @@ spec:
           image: social-eng-app
           ports:
             - containerPort: 8080
-          # Container-уровень securityContext: закрывает находки Trivy
-          # #3 (allowPrivilegeEscalation), #4/#5 (drop ALL capabilities),
-          # #7 (readOnlyRootFilesystem — корневая ФС только для чтения;
-          # всё, что нужно писать в рантайме — nginx-кэш, pid-файл,
-          # /tmp и сама HTML-директория — вынесено на отдельные emptyDir
-          # ниже, они не подчиняются этому ограничению).
           securityContext:
+            runAsUser: 101
+            runAsGroup: 101
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
