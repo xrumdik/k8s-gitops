@@ -28,26 +28,41 @@ spec:
               app: social-eng-app
       # Pod-уровень securityContext: закрывает находки Trivy #6, #8, #9
       # (runAsUser/runAsGroup ниже 10000 — 101 это стандартный uid/gid
-      # пользователя nginx в официальном образе) и #10 (seccomp-профиль).
+      # рантайм-пользователя образа nginxinc/nginx-unprivileged) и #10
+      # (seccomp-профиль).
       securityContext:
         runAsNonRoot: true
         runAsUser: 101
         runAsGroup: 101
         seccompProfile:
           type: RuntimeDefault
+      # initContainer копирует уже собранную статику из образа в
+      # отдельный emptyDir-том (html), примонтированный в основной
+      # контейнер. Нужен, потому что при readOnlyRootFilesystem: true
+      # основной контейнер не может ничего писать даже на старте —
+      # а пустой emptyDir, примонтированный поверх /usr/share/nginx/html,
+      # иначе перекрыл бы собранный сайт из образа.
+      initContainers:
+        - name: copy-html
+          image: social-eng-app
+          command: ["sh", "-c", "cp -r /usr/share/nginx/html/. /html-dest/"]
+          volumeMounts:
+            - name: html
+              mountPath: /html-dest
       containers:
         - name: social-eng-app
           image: social-eng-app
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           # Container-уровень securityContext: закрывает находки Trivy
           # #3 (allowPrivilegeEscalation), #4/#5 (drop ALL capabilities),
-          # #12 (единственная разрешённая capability — именно
-          # NET_BIND_SERVICE, необходима, чтобы непривилегированный
-          # пользователь мог слушать порт 80; без неё контейнер не
-          # запустится — порты <1024 иначе требуют root).
+          # #7 (readOnlyRootFilesystem — корневая ФС только для чтения;
+          # всё, что нужно писать в рантайме — nginx-кэш, pid-файл,
+          # /tmp и сама HTML-директория — вынесено на отдельные emptyDir
+          # ниже, они не подчиняются этому ограничению).
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
           env:
@@ -62,6 +77,15 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
               cpu: 50m
@@ -81,6 +105,15 @@ spec:
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 15
+      volumes:
+        - name: html
+          emptyDir: {}
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
