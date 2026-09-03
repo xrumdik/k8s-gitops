@@ -44,7 +44,6 @@ spec:
       # иначе перекрыл бы собранный сайт из образа.
       initContainers:
         - name: copy-html
-          # trivy:ignore:AVD-KSV-0013 — image-тег подставляется динамически
           # через Kustomize images-transformer (kustomization.yaml), здесь
           # плейсхолдер без тега по архитектурным причинам (см. комментарий
           # в kustomization.yaml). Реальный образ всегда конкретный SHA-тег.
@@ -69,7 +68,6 @@ spec:
               mountPath: /html-dest
       containers:
         - name: social-eng-app
-          # trivy:ignore:AVD-KSV-0013 — см. пояснение у initContainer выше.
           image: social-eng-app
           ports:
             - containerPort: 8080
