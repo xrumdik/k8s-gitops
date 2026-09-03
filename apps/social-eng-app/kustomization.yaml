@@ -6,4 +6,4 @@ resources:
 images:
 - name: social-eng-app
   newName: ghcr.io/xrumdik/social-eng-app
-  newTag: latest
+  newTag: 8df3d380f460b5eaffdb7e789e8f1a0d2b013732
